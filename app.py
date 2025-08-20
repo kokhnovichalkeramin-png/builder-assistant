@@ -1,16 +1,11 @@
 import os
 import streamlit as st
 from PyPDF2 import PdfReader
-from openai import OpenAI
 
-# Настройка Streamlit
-st.set_page_config(page_title="Строительный ИИ-ассистент", page_icon="🏗")
-st.title("🏗 ИИ помощник по нормативке")
+st.set_page_config(page_title="Строительный ассистент", page_icon="🏗")
+st.title("🏗 Поиск по PDF-документам")
 
-# Настройка OpenAI
-# Нужно установить переменную окружения OPENAI_API_KEY с вашим ключом
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+# Папка с PDF
 PDF_FOLDER = "docs"
 
 # Загружаем PDF
@@ -36,24 +31,27 @@ pdf_texts = load_pdfs(PDF_FOLDER)
 # Поле для запроса
 question = st.text_input("Задай вопрос:")
 
-# Поиск и генерация ответа через GPT
-def ask_gpt(question, documents):
-    # Объединяем тексты документов (можно брать только релевантные куски для оптимизации)
-    context = "\n\n".join([f"Документ: {doc[0]}\n{doc[1][:2000]}" for doc in documents])  # первые 2000 символов
-    prompt = f"Ты строительный эксперт. Используя следующие документы:\n{context}\n\nОтветь на вопрос: {question}"
-    
-    response = client.chat.completions.create(
-        model="gpt-4o-mini", 
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
-        max_tokens=500
-    )
-    answer = response.choices[0].message.content
-    return answer
+# Поиск по PDF
+def search_in_pdfs(query, documents):
+    results = []
+    query_lower = query.lower()
+    for filename, text in documents:
+        if text and query_lower in text.lower():
+            # Находим первые 500 символов с вхождением
+            idx = text.lower().find(query_lower)
+            start = max(0, idx - 100)
+            end = min(len(text), idx + 400)
+            snippet = text[start:end].replace("\n", " ")
+            results.append((filename, snippet))
+    return results
 
 if question and pdf_texts:
-    with st.spinner("Обрабатываю вопрос..."):
-        answer = ask_gpt(question, pdf_texts)
-    st.markdown(f"**Ответ ИИ:**\n{answer}")
+    results = search_in_pdfs(question, pdf_texts)
+    if results:
+        st.success(f"Найдено {len(results)} совпадений:")
+        for res in results:
+            st.write(f"📄 В документе **{res[0]}**:\n{res[1]}")
+    else:
+        st.warning("❌ Ничего не найдено в документах")
 elif question:
     st.warning("Нет загруженных PDF для анализа")
