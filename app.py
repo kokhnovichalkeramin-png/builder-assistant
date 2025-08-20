@@ -8,8 +8,9 @@ st.title("🏗 ИИ помощник по нормативке")
 # Поле для текста
 question = st.text_input("Задай вопрос:")
 
-# Заглушка для документов (позже подключим Google Drive)
-pdf_paths = ["docs/sample.pdf"]  # временно
+PDF_FOLDER = "docs"
+
+pdf_paths = [os.path.join(PDF_FOLDER, f) for f in os.listdir(PDF_FOLDER) if f.endswith(".pdf")]
 
 def search_in_pdfs(query, pdfs):
     results = []
