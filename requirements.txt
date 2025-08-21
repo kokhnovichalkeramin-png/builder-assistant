@@ -2,9 +2,7 @@ langchain==0.2.0
 langchain-huggingface==0.0.3
 langchain-community==0.2.0
 sentence-transformers==2.7.0
+faiss-cpu==1.8.0
 llama-cpp-python==0.2.78
 streamlit==1.36.0
 pypdf==4.2.0
-# Эта версия faiss-gpu, которая обычно работает с PyTorch
-torch==2.3.0
-faiss-gpu==1.7.2
